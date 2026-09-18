@@ -597,7 +597,11 @@ function modesAvailable(state) {
 // The order is the panel's, weakest first; a bridge that grades nothing sends
 // no `ancLevels`, and that is an empty row rather than a default set, because
 // unlike the modes there is no protocol with a fixed set of strengths.
-var ANC_LEVEL_ORDER = ["low", "mid", "high", "adaptive"]
+// This fork's vocabulary is the Q30's: the A3028 grades its noise cancelling by
+// the place you are in, not by strength. Upstream's list is Nothing's -- low,
+// mid, high, adaptive -- and the two do not map onto each other, so naming one
+// in the other's words would be a lie on screen.
+var ANC_LEVEL_ORDER = ["transport", "outdoor", "indoor", "custom"]
 
 function ancLevelsAvailable(state) {
   var list = state ? state.ancLevels : undefined

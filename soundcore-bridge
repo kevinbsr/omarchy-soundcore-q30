@@ -88,6 +88,16 @@ MODELS = {
 UNKNOWN = MODELS["b302a"]
 
 MODE_FROM_BYTE = {0x00: "anc", 0x01: "ambient", 0x02: "off"}
+
+# The second byte of the Q30's block grades the noise cancelling, and the
+# device keeps it whichever listening mode is on. The names are OpenSCQ30's for
+# the A3028; what was verified here is that the field is written and read back
+# for each of 0x00, 0x02 and 0x03 (0x01 was the value the headphones arrived
+# with). Custom is the one the phone app pairs with a slider this plugin does
+# not draw: selecting it applies whatever level the device already holds.
+ANC_LEVEL_FROM_BYTE = {0x00: "transport", 0x01: "outdoor", 0x02: "indoor", 0x03: "custom"}
+BYTE_FROM_ANC_LEVEL = {name: byte for byte, name in ANC_LEVEL_FROM_BYTE.items()}
+ANC_LEVELS = ["transport", "outdoor", "indoor", "custom"]
 BYTE_FROM_MODE = {name: byte for byte, name in MODE_FROM_BYTE.items()}
 AVAILABLE = ["off", "anc", "ambient"]
 
@@ -390,6 +400,14 @@ class Bridge:
             "mode": self.mode,
             "available": AVAILABLE,
         }
+        # The grade lives beside the mode and survives Off and Ambient, so it is
+        # reported whatever the mode is -- the panel keeps the row lit and the
+        # shell carries the last value forward.
+        if len(self.sound_mode_params) >= 2:
+            grade = ANC_LEVEL_FROM_BYTE.get(self.sound_mode_params[1], "")
+            if grade:
+                line["ancLevel"] = grade
+                line["ancLevels"] = ANC_LEVELS
         # A four-byte block has neither, and the shell draws the dial and the
         # switch on their presence: saying nothing is what hides them.
         if len(self.sound_mode_params) >= 6:
@@ -426,6 +444,17 @@ class Bridge:
                 body[0] = byte
                 self.write(make_packet(CMD_SOUND_MODES_SET, bytes(body)))
                 self.confirm()
+        elif parts[0] == "level" and parts[1].lower() in BYTE_FROM_ANC_LEVEL:
+            # `level <name>` is how the shell asks for a grade, the same command
+            # it sends a device that grades its noise cancelling by name.
+            if len(self.sound_mode_params) < 2:
+                return
+            body = list(self.sound_mode_params)
+            body[1] = BYTE_FROM_ANC_LEVEL[parts[1].lower()]
+            self.write(make_packet(CMD_SOUND_MODES_SET, bytes(body)))
+            self.confirm()
+            self.sound_mode_params = body
+            self.on_mode_byte(self.sound_mode_params[0])
         elif parts[0] == "level" and len(parts) > 1:
             if len(self.sound_mode_params) < 6:
                 return

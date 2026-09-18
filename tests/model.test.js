@@ -627,23 +627,24 @@ Deno.test("shortError neutralises markup a helper quoted", () => {
 
 
 Deno.test("ancLevelsAvailable is empty unless the bridge graded the noise cancelling", () => {
-  // The JBL and Sony bridges never mention strengths: no row.
+  // A line that never mentions grades: no row.
   assertEquals(Model.ancLevelsAvailable({ modes: true, mode: "anc" }), []);
   assertEquals(Model.ancLevelsAvailable({}), []);
   assertEquals(Model.ancLevelsAvailable(null), []);
-  // The Nothing bridge's four, in the panel's order rather than the line's.
+  // The Q30's four, in the panel's order rather than the line's.
   assertEquals(
-    Model.ancLevelsAvailable({ ancLevels: ["adaptive", "high", "low", "mid"] }),
-    ["low", "mid", "high", "adaptive"],
+    Model.ancLevelsAvailable({ ancLevels: ["custom", "indoor", "transport", "outdoor"] }),
+    ["transport", "outdoor", "indoor", "custom"],
   );
-  assertEquals(Model.ancLevelsAvailable({ ancLevels: ["high", "wind"] }), ["high"]);
+  assertEquals(Model.ancLevelsAvailable({ ancLevels: ["indoor", "high"] }), ["indoor"]);
   assertEquals(Model.ancLevelsAvailable({ ancLevels: [] }), []);
 });
 
-Deno.test("ancLevel names only a strength the panel can draw", () => {
-  assertEquals(Model.ancLevel({ ancLevel: "high" }), "high");
-  assertEquals(Model.ancLevel({ ancLevel: "adaptive" }), "adaptive");
-  assertEquals(Model.ancLevel({ ancLevel: "loud" }), "");
+Deno.test("ancLevel names only a grade the panel can draw", () => {
+  assertEquals(Model.ancLevel({ ancLevel: "indoor" }), "indoor");
+  assertEquals(Model.ancLevel({ ancLevel: "custom" }), "custom");
+  // Upstream's vocabulary is Nothing's, and this panel cannot name it.
+  assertEquals(Model.ancLevel({ ancLevel: "high" }), "");
   assertEquals(Model.ancLevel({}), "");
   assertEquals(Model.ancLevel(null), "");
 });
