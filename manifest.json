@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "id": "kevin.q30",
+  "name": "Soundcore Q30",
+  "version": "1.0.0",
+  "author": "Kevin",
+  "license": "MIT",
+  "description": "Battery and listening mode for the soundcore Life Q30 (A3028) in the Omarchy bar. A trimmed fork of Omaphones by Jacek Becela, carrying only the Soundcore path.",
+  "kinds": [
+    "service",
+    "bar-widget"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml",
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Soundcore Q30",
+    "description": "One icon filling with the battery; the panel switches Off / ANC / Ambient.",
+    "category": "Audio",
+    "aliases": [
+      "q30",
+      "soundcore"
+    ],
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "deviceMatch": "",
+      "lowBatteryThreshold": 20,
+      "showPercentage": false,
+      "hideWhenDisconnected": true,
+      "notifyLowBattery": true,
+      "useFastPair": true,
+      "useModeControl": true,
+      "pauseMediaOnDisconnect": true
+    },
+    "schema": [
+      {
+        "key": "deviceMatch",
+        "type": "string",
+        "label": "Device name or address contains",
+        "defaultValue": "",
+        "description": "Leave empty to show every connected audio device; set a substring to follow only the matching ones."
+      },
+      {
+        "key": "useFastPair",
+        "type": "boolean",
+        "label": "Read battery over Google Fast Pair",
+        "defaultValue": true,
+        "description": "Left, right and case levels over the Fast Pair channel. Off: battery from a supported noise-control bridge while noise control is enabled, otherwise BlueZ's single figure if available. JBL noise control needs Fast Pair for its BLE address; bridges using the device's own channel work without Fast Pair."
+      },
+      {
+        "key": "useModeControl",
+        "type": "boolean",
+        "label": "Noise cancellation (Off / ANC / Ambient)",
+        "defaultValue": true,
+        "description": "The MODE row, following changes made on the device too \u2014 plus the ambient level on Sony and Soundcore, and the ANC strength and low-latency switch on Nothing / CMF. Works on Sony MDR v1 and v2, Samsung Galaxy Buds2, Nothing / CMF, Soundcore, Xiaomi Buds 5 Pro, OPPO Enco Air3 Pro, Bose QC45, and some JBL earbuds (JBL needs Fast Pair above). Hidden when the device answers for none."
+      },
+      {
+        "key": "lowBatteryThreshold",
+        "type": "integer",
+        "label": "Low battery threshold (%)",
+        "min": 5,
+        "max": 50,
+        "step": 5,
+        "defaultValue": 20
+      },
+      {
+        "key": "showPercentage",
+        "type": "boolean",
+        "label": "Show a percentage instead of the drawn meters",
+        "defaultValue": false,
+        "description": "On: the lower earbud's percentage next to the glyph, taking a second bar slot. Off: the levels fill the two halves of one drawn mark. A vertical bar always draws the mark."
+      },
+      {
+        "key": "hideWhenDisconnected",
+        "type": "boolean",
+        "label": "Hide the widget while nothing is connected",
+        "defaultValue": true
+      },
+      {
+        "key": "notifyLowBattery",
+        "type": "boolean",
+        "label": "Send a notification at the low battery threshold",
+        "defaultValue": true
+      },
+      {
+        "key": "pauseMediaOnDisconnect",
+        "type": "boolean",
+        "label": "Pause media when a device disconnects or comes off your ears",
+        "defaultValue": true,
+        "description": "Pauses every playing media player when a followed device disconnects (switched off, out of range) and, on headsets with a wear sensor (confirmed on the Sony WH-1000XM6), the moment it comes off your ears while still connected \u2014 and resumes exactly those players when it goes back on."
+      }
+    ]
+  }
+}
