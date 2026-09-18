@@ -21,7 +21,7 @@ pictures are stale until this is run.
 1. Make sure the change is on screen: `omarchy restart shell` (the bar widget
    keeps its old component until then), and wait ~15 s.
 2. Both test devices must be connected — a JBL pair (earbuds: left, right, case)
-   and the Sony WH-CH720N (headset) — `omarchy-shell omaphones status` lists
+   and the Sony WH-CH720N (headset) — `omarchy-shell q30 status` lists
    both. No fullscreen window on the current workspace.
 3. From the plugin directory run `tools/rebuild-visuals` (or
    `tools/rebuild-visuals --restart` to do step 1 for you). It takes the two

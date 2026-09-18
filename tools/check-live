@@ -21,7 +21,7 @@ import time
 
 
 def ipc(*args):
-    return subprocess.check_output(["omarchy-shell", "omaphones", *map(str, args)],
+    return subprocess.check_output(["omarchy-shell", "q30", *map(str, args)],
                                    text=True, timeout=8).strip()
 
 

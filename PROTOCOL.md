@@ -148,7 +148,7 @@ what carries the row along. The Space One Pro sends the ACK alone. The write
 lands — reading back over the vendor channel confirms it, tail intact:
 
 ```
-$ omarchy-shell omaphones setMode anc
+$ omarchy-shell q30 setMode anc
 ok
 <<< 06 01 body=00 50 01 01 00 05        mode 0, and the five neighbours untouched
 ```

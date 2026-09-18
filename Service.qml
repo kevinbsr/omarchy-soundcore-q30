@@ -13,7 +13,7 @@ import "Model.js" as Model
 // out, two BLE bridges would each hold a link open on the earbuds' radio, and
 // one drained battery would produce as many warnings as you have monitors.
 // Loaded as a service instead, this runs once for the session; every panel finds
-// it with shell.serviceFor("io.github.ncr.omaphones") and only draws what it says.
+// it with shell.serviceFor("kevin.q30") and only draws what it says.
 //
 // What it does not do is talk to a device. It used to follow one — the best of
 // whatever was paired — and a JBL pair and a Sony headset connected at the same
@@ -83,7 +83,7 @@ Item {
   readonly property var followed: Model.sortFollowers(followers, persisted.lastAddress)
   readonly property var primary: followed.length > 0 ? followed[0] : null
 
-  readonly property string pluginId: "io.github.ncr.omaphones"
+  readonly property string pluginId: "kevin.q30"
 
   // Which addresses have a follower, as a model rather than as a list, because a
   // list assigned wholesale rebuilds every delegate: a JBL pair connecting would
@@ -498,10 +498,10 @@ Item {
     }
   }
 
-  // ---- The IPC surface, `omarchy-shell omaphones <method>`. It lives here and
+  // ---- The IPC surface, `omarchy-shell q30 <method>`. It lives here and
   //      not in Panel.qml because a target may be registered once and a bar
   //      surface exists per monitor: two screens would mean two handlers
-  //      fighting over the name "omaphones". The panel methods go the long way
+  //      fighting over the name "q30". The panel methods go the long way
   //      round through the shell, which finds whichever bar is showing the
   //      widget; everything else is answered from the followers' state, which
   //      is the same state every panel draws.
@@ -516,7 +516,7 @@ Item {
   //      the exception that needs no `which` at all — it lists every device the
   //      widget follows, one per line.
   IpcHandler {
-    target: "omaphones"
+    target: "q30"
 
     function open(): void { if (root.shell) root.shell.summon(root.pluginId) }
     // openFor names the device the panel should show before it opens; the panel
@@ -747,7 +747,7 @@ Item {
 
   PersistentProperties {
     id: persisted
-    reloadableId: "omaphones"
+    reloadableId: "q30"
     // Which devices have already been warned about, keyed by address. It was one
     // boolean while the widget followed one device; an old boolean restored into
     // this reads as an empty map, which costs at most one repeated warning.
@@ -767,7 +767,7 @@ Item {
     id: modeSupportFile
     // Quickshell.env returns null, not "", for a variable that is not set.
     path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state")
-      + "/omaphones/mode-support.json"
+      + "/q30/mode-support.json"
     watchChanges: true
     printErrors: false
     onLoaded: root.modeSupport = Model.parseSupport(text())

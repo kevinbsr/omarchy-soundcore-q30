@@ -21,7 +21,7 @@ import dbus.mainloop.glib
 from gi.repository import GLib
 
 UUID = "df21fe2c-2515-4fdb-8886-f12c4d67927c"
-PROFILE_PATH = "/io/github/ncr/omaphones/probe"
+PROFILE_PATH = "/io/github/kevinbsr/q30/probe"
 
 GROUPS = {1: "BLUETOOTH_EVENT", 2: "COMPANION_APP_EVENT", 3: "DEVICE_INFO",
           4: "DEVICE_ACTION", 5: "SASS", 8: "HEARABLE_CONTROL", 0xFF: "ACK"}
@@ -145,7 +145,7 @@ def main():
         # is usually it. Say so instead of dumping a traceback.
         sys.exit("gfps_probe: cannot register the Fast Pair profile (%s) — the channel is "
                  "already held, most likely by the widget's reader; stop it first with: "
-                 "omarchy bar set io.github.ncr.omaphones useFastPair false --json"
+                 "omarchy bar set kevin.q30 useFastPair false --json"
                  % error.get_dbus_message())
     print("profile registered for %s" % UUID, flush=True)
 

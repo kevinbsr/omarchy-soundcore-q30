@@ -19,7 +19,7 @@
 # it on the panel, so a series of shots across themes does not jump when the
 # panel sits close to the edge and the centred frame has to be clamped.
 #
-# Needs the widget running (omarchy-shell omaphones status answers), grim, and a
+# Needs the widget running (omarchy-shell q30 status answers), grim, and a
 # Hyprland that takes `hyprctl dispatch 'hl.dsp.focus({ workspace = "N" })'` —
 # Omarchy 4.0 does; older builds take `hyprctl dispatch workspace N`, which is
 # tried second.

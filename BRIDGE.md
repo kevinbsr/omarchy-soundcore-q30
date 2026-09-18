@@ -97,7 +97,7 @@ seconds all afternoon.
 - **A closed pipe is a clean stop.** EOF or EPIPE on stdout is the widget
   going away: exit 0, without a traceback onto the dead pipe.
 - **Profile1 registration** (the D-Bus bridges) at
-  `/io/github/ncr/omaphones/<brand>`, `Role` `client`, no authorisation,
+  `/io/github/kevinbsr/q30/<brand>`, `Role` `client`, no authorisation,
   `ConnectProfile` made asynchronously with the long timeout BlueZ needs, and
   `br-connection-busy` on the first attempt retried rather than reported.
   `sony-bridge` and `samsung-bridge` are the two to read.

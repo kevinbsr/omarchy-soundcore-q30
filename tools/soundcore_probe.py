@@ -18,7 +18,7 @@ from gi.repository import GLib
 
 SOUNDCORE_UUID_PREFIX = "0cf12d31-fac3-4553-bd80-d6832e7"
 DEFAULT_UUID = "0cf12d31-fac3-4553-bd80-d6832e700000"
-PROFILE_PATH = "/io/github/ncr/omaphones/soundcore_probe"
+PROFILE_PATH = "/io/github/kevinbsr/q30/soundcore_probe"
 
 OUTBOUND_HDR = bytes([0x08, 0xEE, 0x00, 0x00, 0x00])
 

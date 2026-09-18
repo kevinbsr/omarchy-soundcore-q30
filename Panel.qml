@@ -21,8 +21,8 @@ import "Model.js" as Model
 // device in the Audio panel. b and v walk to them.
 Panel {
   id: root
-  moduleName: "io.github.ncr.omaphones"
-  // The "omaphones" IPC target belongs to Service.qml, which registers it once for
+  moduleName: "kevin.q30"
+  // The "q30" IPC target belongs to Service.qml, which registers it once for
   // the session: this file is built once per monitor, and a handler here would
   // claim the same name on every screen. manageIpc: false keeps the base panel
   // from opening one; the service opens and closes this widget through the
@@ -48,7 +48,7 @@ Panel {
   // The one instance of the plugin's service, shared by every monitor's copy of
   // this widget. Null for the moment between the bar loading and the service
   // being constructed, and while the plugin is disabled.
-  readonly property var service: bar && bar.shell ? bar.shell.serviceFor("io.github.ncr.omaphones") : null
+  readonly property var service: bar && bar.shell ? bar.shell.serviceFor("kevin.q30") : null
 
   // Every device the service follows, in the order it draws them: one icon each.
   readonly property var followed: service ? service.followed : []
@@ -337,7 +337,7 @@ Panel {
 
   // Walk to the next device, wrapping. Dead with one device followed, which is
   // why the hint line does not mention the keys then.
-  // `omarchy-shell omaphones openFor <which>`: the service names an address, the
+  // `omarchy-shell q30 openFor <which>`: the service names an address, the
   // panel selects that follower (the summon that follows opens it).
   Connections {
     target: root.service

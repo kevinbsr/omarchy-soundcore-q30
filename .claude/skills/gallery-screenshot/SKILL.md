@@ -13,7 +13,7 @@ icon, taken on an empty workspace so nothing else is in the frame.
 ## Steps
 
 1. The headphones must be connected and followed by the widget:
-   `omarchy-shell omaphones status` lists them. `<which>` below is a piece of the
+   `omarchy-shell q30 status` lists them. `<which>` below is a piece of the
    name, the address, or the brand of the mode backend (`sony`, `jbl`).
 2. Run, from the plugin directory:
 
@@ -55,4 +55,4 @@ device.
 - `the panel did not open` — the widget is not running or the shell is stale
   after an update: `omarchy restart shell`, then retry.
 - The mode was not restored (rare, the headset answers late): set it back with
-  `omarchy-shell omaphones setModeFor <mode> <which>`.
+  `omarchy-shell q30 setModeFor <mode> <which>`.
