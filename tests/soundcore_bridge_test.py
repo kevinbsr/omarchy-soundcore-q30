@@ -14,6 +14,11 @@ import unittest
 from tests import harness
 
 bridge_module = harness.load_bridge("soundcore-bridge")
+# The custom curve lives on disk in real use. Tests read it only from the state
+# they feed in, and write nothing: a run must not touch the owner's saved curve,
+# and one session must not inherit another's.
+bridge_module.load_custom_curve = lambda: None
+bridge_module.save_custom_curve = lambda bands: None
 
 INBOUND_HDR = bytes([0x09, 0xFF, 0x00, 0x00, 0x01])
 
@@ -135,3 +140,73 @@ class QueryStandsOver(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Equalizer(unittest.TestCase):
+    """The ten bytes after the battery: preset id, then eight gains."""
+
+    # The state this Q30 reported on 2026-09-18: a custom curve under fefe.
+    CAPTURED = bytes.fromhex(
+        "0200fefe9d93949faa8d8f7800000000000000000000000000000000000000000000"
+        "010001000030352e32343330323842343634354638353045383800010101000001030407")
+    CURVE = [37, 27, 28, 39, 50, 21, 23, 0]
+
+    def session(self, state=None):
+        s = Session(ModelLookup.Q30)
+        s.receive(inbound((0x01, 0x01), state or self.CAPTURED))
+        return s
+
+    def test_the_captured_curve_reads_as_custom(self):
+        s = self.session()
+        self.assertEqual(s.bridge.eq_preset, 0xFEFE)
+        self.assertEqual(s.bridge.eq_bands, self.CURVE)
+        self.assertEqual(s.lines[0]["eq"], "Custom")
+        self.assertIn("Custom", s.lines[0]["eqPresets"])
+
+    def test_a_preset_is_sent_with_its_own_gains(self):
+        s = self.session()
+        s.command("eq Treble Reducer")
+        # OpenSCQ30's own example frame for Treble Reducer, byte for byte.
+        self.assertEqual(s.frames[-1], bytes.fromhex("08ee0000000281140015007878786" "45a50503ca4"))
+
+    def test_signature_is_flat(self):
+        s = self.session()
+        s.command("eq Soundcore Signature")
+        self.assertEqual(s.frames[-1], bytes.fromhex("08ee0000000281140000007878787878787878" "4d"))
+
+    def test_custom_sends_the_curve_back(self):
+        s = self.session()
+        s.command("eq Custom")
+        body = bytes([0xFE, 0xFE] + [g + 120 for g in self.CURVE])
+        self.assertEqual(s.frames[-1], bridge_module.make_packet(bridge_module.CMD_SET_EQUALIZER, body))
+
+    def test_the_state_is_asked_for_after_a_write(self):
+        s = self.session()
+        s.command("eq Rock")
+        self.assertIn(bridge_module.EQ_RECHECK_DELAY, s.timers)
+
+    def test_custom_is_not_offered_without_a_curve(self):
+        state = bytearray(self.CAPTURED)
+        state[2:4] = bytes([0x11, 0x00])          # Rock, not custom
+        s = self.session(bytes(state))
+        self.assertEqual(s.lines[0]["eq"], "Rock")
+        self.assertNotIn("Custom", s.lines[0]["eqPresets"])
+        before = list(s.frames)
+        s.command("eq Custom")
+        self.assertEqual(s.frames, before)        # nothing to send back
+
+    def test_an_unknown_name_sends_nothing(self):
+        s = self.session()
+        before = list(s.frames)
+        s.command("eq Loudness War")
+        self.assertEqual(s.frames, before)
+
+
+class Battery(unittest.TestCase):
+    def test_level_is_fifths_and_charging_is_the_second_byte(self):
+        s = Equalizer().session()
+        self.assertEqual(s.lines[0]["battery"], {"headset": 40})   # 02 00 captured
+        state = bytearray(Equalizer.CAPTURED)
+        state[0:2] = bytes([0x05, 0x01])
+        s = Equalizer().session(bytes(state))
+        self.assertEqual(s.lines[0]["battery"], {"headset": 100, "charging": ["headset"]})

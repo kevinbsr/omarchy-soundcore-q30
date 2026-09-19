@@ -378,7 +378,7 @@ Item {
     }
     if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) return
     var carried = ["available", "level", "voice", "worn",
-                   "ancLevel", "ancLevels", "latency", "battery"]
+                   "ancLevel", "ancLevels", "latency", "battery", "eq", "eqPresets"]
     for (var i = 0; i < carried.length; i++) {
       var key = carried[i]
       if (parsed[key] === undefined && ancState[key] !== undefined) parsed[key] = ancState[key]
@@ -506,6 +506,18 @@ Item {
   // stores the strength with the mode, so asking for one turns ANC on at it —
   // the same way Sony's dial switches the headset to Ambient. A strength the
   // bridge did not list is not a write.
+  // The equalizer, on a device whose bridge reported one. The name goes to the
+  // bridge as is; it answers with the preset the device then reports.
+  readonly property string eqPreset: typeof ancState.eq === "string" ? ancState.eq : ""
+  readonly property var eqPresets: Array.isArray(ancState.eqPresets) ? ancState.eqPresets : []
+
+  function setEqualizer(name) {
+    if (!ancLive || !classicBridge.running) return false
+    if (eqPresets.indexOf(String(name)) === -1) return false
+    classicBridge.write("eq " + name + "\n")
+    return true
+  }
+
   function setAncLevel(level) {
     if (!ancLive || !classicBridge.running) return false
     if (ancLevels.indexOf(String(level)) === -1) return false

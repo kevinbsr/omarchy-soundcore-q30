@@ -59,6 +59,7 @@ OUTBOUND_HDR = bytes([0x08, 0xEE, 0x00, 0x00, 0x00])
 CMD_STATE_UPDATE = (0x01, 0x01)
 CMD_SOUND_MODES_NOTIFY = (0x06, 0x01)
 CMD_SOUND_MODES_SET = (0x06, 0x81)
+CMD_SET_EQUALIZER = (0x02, 0x81)
 
 # What each model was seen to do on the wire, keyed by the model id at the
 # end of its vendor UUID (`d1402` in `...d6832e7d1402`). A row is somebody's
@@ -98,6 +99,87 @@ MODE_FROM_BYTE = {0x00: "anc", 0x01: "ambient", 0x02: "off"}
 ANC_LEVEL_FROM_BYTE = {0x00: "transport", 0x01: "outdoor", 0x02: "indoor", 0x03: "custom"}
 BYTE_FROM_ANC_LEVEL = {name: byte for byte, name in ANC_LEVEL_FROM_BYTE.items()}
 ANC_LEVELS = ["transport", "outdoor", "indoor", "custom"]
+
+# The equalizer. In the Q30's 01 01 state it follows the battery: a two-byte
+# preset id (little-endian) at 2, then eight band gains at 4, each encoded as
+# tenths of a dB plus 120 -- 0x78 is flat. A write is `02 81` with the same ten
+# bytes. The table is OpenSCQ30's common presets, which is what the A3028
+# module there uses; the encoding checks out against its own example frames
+# and against the state this device reports.
+#
+# Choosing a preset sends that preset's gains, and the device drops whatever
+# custom curve it held: the phone app keeps the custom curve on the phone. So
+# a curve seen under the custom id is kept on disk, and choosing "Custom" sends
+# it back.
+EQ_OFFSET = 2
+
+# The battery leads the state: a level from 0 to 5, then a charging flag. Coarse
+# -- a fifth at a time -- which is why Fast Pair's percentage stays the figure
+# on screen; the shell takes this one only for a set with no Fast Pair stream.
+# What it adds on the Q30 is the charging flag.
+EQ_CUSTOM_ID = 0xFEFE
+EQ_CUSTOM = "Custom"
+EQ_PRESETS = [
+    (0x0000, "Soundcore Signature", (0, 0, 0, 0, 0, 0, 0, 0)),
+    (0x0001, "Acoustic", (40, 10, 20, 20, 40, 40, 40, 20)),
+    (0x0002, "Bass Booster", (40, 30, 10, 0, 0, 0, 0, 0)),
+    (0x0003, "Bass Reducer", (-40, -30, -10, 0, 0, 0, 0, 0)),
+    (0x0004, "Classical", (30, 30, -20, -20, 0, 20, 30, 40)),
+    (0x0005, "Podcast", (-30, 20, 40, 40, 30, 20, 0, -20)),
+    (0x0006, "Dance", (20, -30, -10, 10, 20, 20, 10, -30)),
+    (0x0007, "Deep", (20, 10, 30, 30, 20, -20, -40, -50)),
+    (0x0008, "Electronic", (30, 20, -20, 20, 10, 20, 30, 30)),
+    (0x0009, "Flat", (-20, -20, -10, 0, 0, 0, -20, -20)),
+    (0x000a, "Hip-Hop", (20, 30, -10, -10, 20, -10, 20, 30)),
+    (0x000b, "Jazz", (20, 20, -20, -20, 0, 20, 30, 40)),
+    (0x000c, "Latin", (0, 0, -20, -20, -20, 0, 30, 50)),
+    (0x000d, "Lounge", (-10, 20, 40, 30, 0, -20, 20, 10)),
+    (0x000e, "Piano", (0, 30, 30, 20, 40, 50, 30, 40)),
+    (0x000f, "Pop", (-10, 10, 30, 30, 10, -10, -20, -30)),
+    (0x0010, "R&B", (60, 20, -20, -20, 20, 30, 30, 40)),
+    (0x0011, "Rock", (30, 20, -10, -10, 10, 30, 30, 30)),
+    (0x0012, "Small Speakers", (40, 30, 10, 0, -20, -30, -40, -40)),
+    (0x0013, "Spoken Word", (-30, -20, 10, 20, 20, 10, 0, -30)),
+    (0x0014, "Treble Booster", (-20, -20, -20, -10, 10, 20, 20, 40)),
+    (0x0015, "Treble Reducer", (0, 0, 0, -20, -30, -40, -40, -60)),
+]
+EQ_BY_NAME = {name.lower(): (preset_id, bands) for preset_id, name, bands in EQ_PRESETS}
+EQ_NAME_BY_ID = {preset_id: name for preset_id, name, _bands in EQ_PRESETS}
+EQ_NAMES = [name for _id, name, _bands in EQ_PRESETS] + [EQ_CUSTOM]
+EQ_STATE_FILE = os.path.join(
+    os.environ.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state"),
+    "kevin-q30", "custom-eq.json")
+EQ_RECHECK_DELAY = 400
+
+
+def eq_encode(gain):
+    return max(0, min(0xF0, int(gain) + 120))
+
+
+def eq_decode(byte):
+    return int(byte) - 120
+
+
+def load_custom_curve():
+    try:
+        with open(EQ_STATE_FILE) as f:
+            bands = json.load(f).get("bands")
+    except (OSError, ValueError, AttributeError):
+        return None
+    if isinstance(bands, list) and len(bands) == 8 and all(isinstance(b, int) for b in bands):
+        return bands
+    return None
+
+
+def save_custom_curve(bands):
+    try:
+        os.makedirs(os.path.dirname(EQ_STATE_FILE), exist_ok=True)
+        tmp = EQ_STATE_FILE + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump({"bands": list(bands)}, f)
+        os.replace(tmp, EQ_STATE_FILE)
+    except OSError:
+        pass
 BYTE_FROM_MODE = {name: byte for byte, name in MODE_FROM_BYTE.items()}
 AVAILABLE = ["off", "anc", "ambient"]
 
@@ -188,6 +270,12 @@ class Bridge:
         # Set once the device has answered a 06 01 of its own accord or on
         # request. Only those devices are asked again after a write.
         self.query_answered = False
+        # The equalizer as the device last reported it, and the custom curve,
+        # from disk until the device shows one of its own.
+        self.eq_preset = None
+        self.eq_bands = None
+        self.battery = None
+        self.custom_curve = load_custom_curve()
         self.mode_seen = False
         self.mode = ""
         self.last_line = None
@@ -360,6 +448,11 @@ class Bridge:
     def on_packet(self, cmd, body):
         if cmd == CMD_STATE_UPDATE:
             self.handshake_seen = True
+            self.read_equalizer(body)
+            if len(body) >= 2 and body[0] <= 5:
+                self.battery = {"headset": body[0] * 20}
+                if body[1]:
+                    self.battery["charging"] = ["headset"]
             # The sound-mode bytes sit where this model's row says, as wide
             # as the row says.
             at = self.model["offset"]
@@ -408,6 +501,12 @@ class Bridge:
             if grade:
                 line["ancLevel"] = grade
                 line["ancLevels"] = ANC_LEVELS
+        if self.battery is not None:
+            line["battery"] = self.battery
+        if self.eq_preset is not None:
+            line["eq"] = self.eq_name()
+            # Custom is offered only once there is a curve to send back.
+            line["eqPresets"] = EQ_NAMES if self.custom_curve else EQ_NAMES[:-1]
         # A four-byte block has neither, and the shell draws the dial and the
         # switch on their presence: saying nothing is what hides them.
         if len(self.sound_mode_params) >= 6:
@@ -432,9 +531,46 @@ class Bridge:
         GLib.timeout_add(CONFIRM_DELAY, lambda: (
             self.write(make_packet(CMD_SOUND_MODES_NOTIFY)), False)[1])
 
+    def read_equalizer(self, body):
+        """The preset id and the eight gains, from a 01 01 state."""
+        if len(body) < EQ_OFFSET + 10:
+            return
+        preset = body[EQ_OFFSET] | (body[EQ_OFFSET + 1] << 8)
+        bands = [eq_decode(b) for b in body[EQ_OFFSET + 2:EQ_OFFSET + 10]]
+        self.eq_preset = preset
+        self.eq_bands = bands
+        if preset == EQ_CUSTOM_ID and bands != self.custom_curve:
+            self.custom_curve = bands
+            save_custom_curve(bands)
+
+    def eq_name(self):
+        if self.eq_preset == EQ_CUSTOM_ID:
+            return EQ_CUSTOM
+        return EQ_NAME_BY_ID.get(self.eq_preset, "")
+
+    def set_equalizer(self, name):
+        wanted = str(name).strip().lower()
+        if wanted == EQ_CUSTOM.lower():
+            if not self.custom_curve:
+                return
+            preset, bands = EQ_CUSTOM_ID, self.custom_curve
+        elif wanted in EQ_BY_NAME:
+            preset, bands = EQ_BY_NAME[wanted]
+        else:
+            return
+        body = bytes([preset & 0xFF, preset >> 8] + [eq_encode(b) for b in bands])
+        self.write(make_packet(CMD_SET_EQUALIZER, body))
+        # The device acknowledges and says nothing more, so ask for the state and
+        # let what it reports be what the panel shows.
+        GLib.timeout_add(EQ_RECHECK_DELAY, lambda: (
+            self.write(make_packet(CMD_STATE_UPDATE)), False)[1])
+
     def command(self, line):
         parts = line.strip().split()
         if not parts or not self.mode_seen:
+            return
+        if parts[0] == "eq" and len(parts) > 1:
+            self.set_equalizer(line.strip()[3:])
             return
         if parts[0] == "set" and len(parts) > 1:
             wanted = parts[1].lower()

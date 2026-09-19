@@ -2,7 +2,7 @@
   "model": "Soundcore Life Q30",
   "owner": "Kevin",
   "bridge": "soundcore-bridge",
-  "notes": "Vendor UUID suffix b302a (A3028), captured on hardware 2026-09-18. The state payload is 70 bytes and the sound-mode block sits at 35, four bytes wide: mode, noise-cancelling mode, and two more. The firmware string starts at 39, so a six-byte read would take '0' and '5' from it and post them back as parameters on the next write. 06 01 is answered with the same four bytes. No ambient level and no wind switch, so the row reports neither. The second byte of the block grades the noise cancelling -- transport, outdoor, indoor, custom -- and the device keeps it across modes, so every line carries it.",
+  "notes": "Vendor UUID suffix b302a (A3028), captured on hardware 2026-09-18. The state payload is 70 bytes and the sound-mode block sits at 35, four bytes wide: mode, noise-cancelling mode, and two more. The firmware string starts at 39, so a six-byte read would take '0' and '5' from it and post them back as parameters on the next write. 06 01 is answered with the same four bytes. No ambient level and no wind switch, so the row reports neither. The second byte of the block grades the noise cancelling -- transport, outdoor, indoor, custom -- and the device keeps it across modes, so every line carries it. The captured state carries a custom equalizer curve under preset id fefe, which is what every line reports, and what makes Custom selectable.",
   "session": {
     "uuid": "0cf12d31-fac3-4553-bd80-d6832e7b302a"
   },
@@ -36,7 +36,36 @@
             "outdoor",
             "indoor",
             "custom"
-          ]
+          ],
+          "eq": "Custom",
+          "eqPresets": [
+            "Soundcore Signature",
+            "Acoustic",
+            "Bass Booster",
+            "Bass Reducer",
+            "Classical",
+            "Podcast",
+            "Dance",
+            "Deep",
+            "Electronic",
+            "Flat",
+            "Hip-Hop",
+            "Jazz",
+            "Latin",
+            "Lounge",
+            "Piano",
+            "Pop",
+            "R&B",
+            "Rock",
+            "Small Speakers",
+            "Spoken Word",
+            "Treble Booster",
+            "Treble Reducer",
+            "Custom"
+          ],
+          "battery": {
+            "headset": 40
+          }
         }
       ],
       "note": "no level and no voice: this model has neither, and the panel draws no dial"
@@ -103,7 +132,36 @@
             "outdoor",
             "indoor",
             "custom"
-          ]
+          ],
+          "eq": "Custom",
+          "eqPresets": [
+            "Soundcore Signature",
+            "Acoustic",
+            "Bass Booster",
+            "Bass Reducer",
+            "Classical",
+            "Podcast",
+            "Dance",
+            "Deep",
+            "Electronic",
+            "Flat",
+            "Hip-Hop",
+            "Jazz",
+            "Latin",
+            "Lounge",
+            "Piano",
+            "Pop",
+            "R&B",
+            "Rock",
+            "Small Speakers",
+            "Spoken Word",
+            "Treble Booster",
+            "Treble Reducer",
+            "Custom"
+          ],
+          "battery": {
+            "headset": 40
+          }
         },
         {
           "modes": true,
@@ -119,7 +177,36 @@
             "outdoor",
             "indoor",
             "custom"
-          ]
+          ],
+          "eq": "Custom",
+          "eqPresets": [
+            "Soundcore Signature",
+            "Acoustic",
+            "Bass Booster",
+            "Bass Reducer",
+            "Classical",
+            "Podcast",
+            "Dance",
+            "Deep",
+            "Electronic",
+            "Flat",
+            "Hip-Hop",
+            "Jazz",
+            "Latin",
+            "Lounge",
+            "Piano",
+            "Pop",
+            "R&B",
+            "Rock",
+            "Small Speakers",
+            "Spoken Word",
+            "Treble Booster",
+            "Treble Reducer",
+            "Custom"
+          ],
+          "battery": {
+            "headset": 40
+          }
         }
       ],
       "note": "the two lines the panel saw: no level and no voice on either"

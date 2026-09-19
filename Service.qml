@@ -635,6 +635,11 @@ Item {
     // Sets it, and switches the device to ANC with it, because the device
     // stores the strength with the mode. "unavailable" for a device with no
     // strengths, or no bridge to write through.
+    function eq(): string { return root.primary ? root.primary.eqPreset : "" }
+    function eqPresets(): string { return root.primary ? root.primary.eqPresets.join("\n") : "" }
+    function setEq(name: string): string {
+      return root.primary && root.primary.setEqualizer(String(name)) ? "ok" : "unavailable"
+    }
     function setAncLevel(level: string): string {
       return root.writeAncLevel(root.primary, level)
     }

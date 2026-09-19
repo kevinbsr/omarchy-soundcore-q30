@@ -139,6 +139,12 @@ Panel {
   // ANC strength, Nothing only: which strengths the device grades its noise
   // cancelling in, and the one it is at (or was last at).
   readonly property var ancLevels: current ? current.ancLevels : []
+  // The equalizer: the preset the device reports, and the list to step
+  // through. Twenty-two presets and Custom do not fit a row of buttons, so the
+  // row is a name between two arrows, and the arrows walk the list.
+  readonly property string eqPreset: current ? current.eqPreset : ""
+  readonly property var eqPresets: current ? current.eqPresets : []
+  readonly property bool eqRowVisible: modeRowVisible && eqPresets.length > 0 && eqPreset !== ""
   readonly property string ancLevel: current ? current.ancLevel : ""
   // Low latency, Nothing only: whether the bridge has mentioned the switch,
   // and its position.
@@ -242,6 +248,7 @@ Panel {
       parts.push("[ ] Level", ambientVoiceLabel === "Focus on voice" ? "f Voice" : "f Wind")
     for (var j = 0; j < ancLevelOptions.length; j++)
       if (levelRowVisible) parts.push(ancLevelOptions[j].key + " " + ancLevelOptions[j].label)
+    if (eqRowVisible) parts.push("- = EQ")
     if (latencyRowVisible) parts.push("g Latency")
     return parts.join(" · ")
   }
@@ -448,6 +455,13 @@ Panel {
 
   // The strengths follow the same rule as the modes: a digit is a key only
   // while the row it drives is drawn.
+  function stepEqualizer(delta) {
+    if (!eqRowVisible || !current) return false
+    var at = eqPresets.indexOf(eqPreset)
+    var next = (at < 0 ? 0 : at + delta + eqPresets.length) % eqPresets.length
+    return current.setEqualizer(eqPresets[next])
+  }
+
   function setAncLevel(level) {
     if (!levelRowVisible || !current) return false
     return current.setAncLevel(level)
@@ -557,6 +571,10 @@ Panel {
         // , and . sit next to each other under the hand that is on the keys.
         else if (t === ",") root.stepDevice(-1)
         else if (t === ".") root.stepDevice(1)
+        // The equalizer, beside each other like a stepper: , and . were taken
+        // by the devices, and every letter by a mode or a panel.
+        else if (t === "-") root.stepEqualizer(-1)
+        else if (t === "=" || t === "+") root.stepEqualizer(1)
         // A letter is a mode; a digit is a strength. Neither is a key on a
         // device that does not offer what it names.
         else if (!root.setAncModeByKey(t)) root.setAncLevelByKey(t)
@@ -767,6 +785,61 @@ Panel {
               fontFamily: root.fontFamily
               fontSize: Style.font.bodySmall
               onChanged: function(level) { root.setAncLevel(level) }
+            }
+          }
+
+          // ---- The equalizer: the preset the device reports, stepped with
+          //      the arrows or with - and = -- the device answers every write
+          //      with its new state, so the name is always what it plays.
+          Column {
+            width: parent.width
+            visible: root.eqRowVisible
+            spacing: Style.space(6)
+
+            Text {
+              text: "Equalizer"
+              color: root.foreground
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.body
+            }
+
+            Item {
+              width: parent.width
+              implicitHeight: Math.max(eqPrev.implicitHeight, eqName.implicitHeight)
+
+              ButtonGroup {
+                id: eqPrev
+                anchors.left: parent.left
+                width: Style.space(44)
+                options: [{ value: "prev", key: "-", label: "‹", tooltip: "Previous preset (-)" }]
+                value: ""
+                foreground: root.foreground
+                background: Color.background
+                fontFamily: root.fontFamily
+                fontSize: Style.font.bodySmall
+                onChanged: function(_v) { root.stepEqualizer(-1) }
+              }
+
+              Text {
+                id: eqName
+                anchors.centerIn: parent
+                text: root.eqPreset
+                color: root.foreground
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.body
+              }
+
+              ButtonGroup {
+                anchors.right: parent.right
+                width: Style.space(44)
+                options: [{ value: "next", key: "=", label: "›", tooltip: "Next preset (=)" }]
+                value: ""
+                foreground: root.foreground
+                background: Color.background
+                fontFamily: root.fontFamily
+                fontSize: Style.font.bodySmall
+                onChanged: function(_v) { root.stepEqualizer(1) }
+              }
             }
           }
 
