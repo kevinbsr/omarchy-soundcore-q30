@@ -215,10 +215,12 @@ Panel {
   // by the key catcher for moving before this panel ever sees them. Digits
   // read as a scale, which is what a strength is.
   readonly property var allLevelOptions: [
-    { value: "low", key: "1", label: "Low", tooltip: "Noise Cancelling, low" },
-    { value: "mid", key: "2", label: "Mid", tooltip: "Noise Cancelling, medium" },
-    { value: "high", key: "3", label: "High", tooltip: "Noise Cancelling, high" },
-    { value: "adaptive", key: "4", label: "Adaptive", tooltip: "Noise Cancelling, adaptive" }
+    // The Q30 grades its noise cancelling by the place you are in rather than by
+    // strength, so these are its four and not upstream's low-to-adaptive.
+    { value: "transport", key: "1", label: "Transport", tooltip: "Noise Cancelling for planes, trains and buses" },
+    { value: "outdoor", key: "2", label: "Outdoor", tooltip: "Noise Cancelling for the street" },
+    { value: "indoor", key: "3", label: "Indoor", tooltip: "Noise Cancelling for offices and rooms" },
+    { value: "custom", key: "4", label: "Custom", tooltip: "Noise Cancelling at the level set in the phone app" }
   ]
 
   readonly property var ancLevelOptions: {
