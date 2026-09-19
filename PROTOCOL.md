@@ -249,6 +249,29 @@ mode replaced, is accepted and changes nothing else:
 
 So the model row carries a width, and the rows that came before say six.
 
+#### The rest of the state: battery, equalizer, grade
+
+Field by field, following OpenSCQ30's A3028 parser, which lands on the sound
+modes at 35 exactly as the probe did:
+
+```
+  0      battery level, 0-5          24..34  hear ID (not used)
+  1      charging, 0/1               35      mode (0 anc, 1 ambient, 2 off)
+  2..3   equalizer preset, u16 LE    36      ANC grade (0 transport, 1 outdoor,
+  4..11  eight gains, dB x10 + 120            2 indoor, 3 custom)
+  12     gender (not used)           37..38  the rest of the block
+  13     age range (not used)        39..    firmware "05.24", then serial
+```
+
+The equalizer is written with `02 81` and the same ten bytes. `fefe` is the
+custom preset; the 22 others carry fixed gains, and sending one makes the device
+drop the custom curve it held. Verified on this unit: Bass Booster read back as
+its own id, and the saved curve sent under `fefe` read back as Custom.
+
+The grade was written and read back for each of 0x00, 0x02 and 0x03. It is kept
+across modes, so a line carries it whatever the mode is.
+
+
 #### No dial, no switch
 
 The Q30 has no ambient level and no wind noise reduction, and the four bytes

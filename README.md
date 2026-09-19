@@ -6,14 +6,24 @@
 
 ## What it does
 
-- **Battery** — one figure, from Google Fast Pair, drawn into the bar icon as it fills.
-- **Listening mode** — Off, ANC and Ambient, from the panel or a key.
-- **Nothing else on the bar** — the icon appears when the headphones are connected and goes when they are not.
+- **Battery** — one figure, from Google Fast Pair, drawn into the bar icon as it
+  fills. The headphones' own state adds whether they are charging.
+- **Listening mode** — Off, ANC and Ambient, from the panel or `o` `n` `a`.
+- **ANC grade** — Transport, Outdoor, Indoor or Custom, from the panel or `1`-`4`.
+  The Q30 grades its noise cancelling by the place you are in rather than by
+  strength, and keeps the grade whichever mode is on.
+- **Equalizer** — the 22 Soundcore presets and your own curve, stepped with the
+  arrows or `-` and `=`. Choosing a preset makes the headphones drop the custom
+  curve they hold (the phone app keeps its copy on the phone), so the plugin
+  saves the curve to `~/.local/state/kevin-q30/custom-eq.json` the first time it
+  sees it, and **Custom** sends it back.
 
 The Q30 has no ambient level and no wind noise reduction, so the panel shows no
-dial and no switch. Its noise-cancelling sub-mode (transport, outdoor, indoor,
-custom) and its equalizer are not exposed: both live in parts of the protocol
-this plugin does not send.
+dial and no switch. Editing the custom curve band by band is not offered: set it
+in the phone app once, and the plugin keeps it from then on.
+
+From a terminal: `omarchy-shell q30 mode`, `setMode ambient`, `ancLevel`,
+`setAncLevel indoor`, `eq`, `setEq "Bass Booster"`, `status`.
 
 ## Install
 
